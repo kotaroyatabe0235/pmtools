@@ -1,0 +1,33 @@
+{
+  "name": "pmtools",
+  "version": "0.2.0",
+  "description": "Browser-based Project Management Tool",
+  "type": "module",
+  "main": "src/api/server.js",
+  "scripts": {
+    "dev": "node --watch src/api/server.js",
+    "dev:api": "node --watch src/api/server.js",
+    "build:api": "tsc -b src/api",
+    "migrate": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "migrate:reset": "prisma migrate reset",
+    "seed": "prisma-db-migrate seed",
+    "db:generate": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.10.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.1",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.5",
+    "prisma": "^5.10.0",
+    "typescript": "^5.4.5"
+  }
+}
