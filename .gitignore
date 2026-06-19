@@ -1,0 +1,34 @@
+# Workspace files - never commit these
+AGENTS.md
+SOUL.md
+TOOLS.md
+IDENTITY.md
+USER.md
+HEARTBEAT.md
+MEMORY.md
+memory/
+
+# Local environment
+node_modules/
+.env
+.env.local
+.dockerignore
+
+# Logs
+PM_LOGS/
+pmtools_logs/
+*.log
+
+# Build artifacts
+*.ts
+*.tsx
+*.js
+*.jsx
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
