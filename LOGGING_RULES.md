@@ -99,6 +99,32 @@ Please confirm when ready to continue.
 - **Action**: Use `session_status` to check token usage
 - **Response**: If >90%, execute push and notify user
 
+### 5. ⏰ Periodic Push Schedule
+
+- **When**: Every 6 hours (or every 180 minutes) automatically
+- **Action**: Commit and push to remote repository
+- **Format**: 
+
+```bash
+git add .
+git commit -m "auto: periodic check [timestamp]"
+git push origin <branch>
+```
+
+- **Purpose**: Ensure work is safely stored on remote before session timeout
+- **Note**: Only commit if there are actual changes
+
+### 6. 📢 Periodic Chat Status Report
+
+- **When**: Every 6 hours (or every 180 minutes) automatically
+- **Format**: Send status message to current chat channel
+- **Include**:
+  - Last completed task/progress
+  - Current focus/next task
+  - Any warnings or blocking issues
+- **Tools**: Use `memory_get` to read recent logs and `sessions_send` or `write` for status
+- **Purpose**: Keep user informed of progress without waiting for manual check-in
+
 ---
 
 ## Priority Order
@@ -106,4 +132,6 @@ Please confirm when ready to continue.
 1. Token Budget Protection (highest - system rule)
 2. Regular Push at Milestones (scheduled)
 3. In-Chat Progress Logging (ongoing)
-4. Standard Logging (daily log, decisions, errors)
+4. Periodic Push Schedule (automated, every 6h)
+5. Periodic Chat Status Report (automated, every 6h)
+6. Standard Logging (daily log, decisions, errors)
