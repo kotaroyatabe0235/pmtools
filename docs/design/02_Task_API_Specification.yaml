@@ -1,0 +1,675 @@
+openapi: 3.0.3
+info:
+  title: PM Tools Task API
+  description: |
+    Task Management API Specification.
+    Part of Phase 2: Tasks Management implementation.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local Development
+tags:
+  - name: Task
+    description: Task management operations
+  - name: Dependency
+    description: Task dependency (Gantt) operations
+paths:
+  /tasks:
+    post:
+      tags:
+        - Task
+      operationId: createTask
+      summary: Create Task
+      description: Create a new task in a project.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateTaskResponse'
+        '400':
+          description: Invalid request body
+        '403':
+          description: Forbidden - insufficient permissions
+        '400':
+          description: Invalid date range (start > due)
+        '400':
+          description: Invalid tags (none selected)
+    get:
+      tags:
+        - Task
+      operationId: getTasks
+      summary: List Tasks
+      description: |
+        Get paginated list of tasks with filtering and sorting.
+      parameters:
+        - name: projectId
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+          description: Filter by project ID
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by status
+        - name: assignedTo
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+          description: Filter by assignee ID
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Filter by start date
+        - name: dueDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Filter by due date
+        - name: tags
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Filter by tag IDs
+        - name: keyword
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+          description: Search keyword in title
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number (default: 1)
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Items per page (default: 20)
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Sort key
+          enum:
+            - id
+            - title
+            - status
+            - dueDate
+            - assignedTo
+        - name: order
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Sort order
+          enum:
+            - ASC
+            - DESC
+      responses:
+        '200':
+          description: Task list retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskListResponse'
+  '/tasks/{id}':
+    get:
+      tags:
+        - Task
+      operationId: getTask
+      summary: Get Task
+      description: Get a specific task by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: Task ID
+      responses:
+        '200':
+          description: Task details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDetailResponse'
+        '404':
+          description: Task not found
+        '403':
+          description: Forbidden - insufficient permissions
+    put:
+      tags:
+        - Task
+      operationId: updateTask
+      summary: Update Task
+      description: Update an existing task.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: Task ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '200':
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateTaskResponse'
+        '400':
+          description: Invalid status transition
+        '404':
+          description: Task not found
+        '403':
+          description: Forbidden - insufficient permissions
+    delete:
+      tags:
+        - Task
+      operationId: deleteTask
+      summary: Delete Task
+      description: Delete a task and its resources.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: Task ID
+      responses:
+        '200':
+          description: Task deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteResponse'
+        '404':
+          description: Task not found
+        '400':
+          description: Circular dependency - cannot delete
+    post:
+      tags:
+        - Task
+      operationId: moveTask
+      summary: Move Task
+      description: Move a task to a different project/group/assignee.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: Task ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoveTaskRequest'
+      responses:
+        '200':
+          description: Task moved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoveTaskResponse'
+        '404':
+          description: Task or target not found
+        '403':
+          description: Forbidden - insufficient permissions
+        '400':
+          description: Invalid move operation
+  '/tasks/{id}/dependencies':
+    get:
+      tags:
+        - Dependency
+      operationId: getDependencies
+      summary: Get Task Dependencies
+      description: Get dependency list for a task (Gantt view).
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: Task ID
+      responses:
+        '200':
+          description: Dependencies retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyListResponse'
+        '404':
+          description: Task not found
+        '400':
+          description: Circular dependency detected
+        '403':
+          description: Forbidden - insufficient permissions
+    put:
+      tags:
+        - Dependency
+      operationId: updateDependencies
+      summary: Update Task Dependencies
+      description: Update dependency relationships for a task.
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: Task ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDependencyRequest'
+      responses:
+        '200':
+          description: Dependencies updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyListResponse'
+        '400':
+          description: Circular dependency detected
+        '400':
+          description: Date conflict with dependent tasks
+        '404':
+          description: Task not found
+        '403':
+          description: Forbidden - insufficient permissions
+components:
+  schemas:
+    CreateTaskRequest:
+      type: object
+      required:
+        - title
+        - projectId
+        - assignedTo
+        - status
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: "Task Title"
+        projectId:
+          type: integer
+          minimum: 1
+          example: 1
+        assignedTo:
+          type: integer
+          minimum: 1
+          example: 100
+        description:
+          type: string
+          maxLength: 1000
+          nullable: true
+          example: "Task description here"
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        startDate:
+          type: string
+          format: date
+          example: "2026-07-01"
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+          example: "2026-07-10"
+        estimatedHours:
+          type: number
+          format: double
+          minimum: 0
+          precision: 2
+          example: 8.5
+        tags:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+          minItems: 1
+          example: [1, 2]
+    CreateTaskResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/Task'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: "Task Title"
+        projectId:
+          type: integer
+          example: 1
+        assignedTo:
+          type: integer
+          example: 100
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        startDate:
+          type: string
+          format: date
+          example: "2026-07-01"
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+          example: "2026-07-10"
+        estimatedHours:
+          type: number
+          format: double
+          example: 8.5
+        actualHours:
+          type: number
+          format: double
+          nullable: true
+          example: 4.0
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-06-21T10:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-06-21T10:00:00Z"
+    TaskDetailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/Task'
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskAttachment'
+        dependencies:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskRelationship'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+    TaskListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          example: 1
+        size:
+          type: integer
+          minimum: 1
+          maximum: 100
+          example: 20
+        total:
+          type: integer
+          example: 100
+        totalPages:
+          type: integer
+          example: 5
+    DeleteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+    MoveTaskRequest:
+      type: object
+      properties:
+        projectId:
+          type: integer
+          nullable: true
+          minimum: 1
+          description: Target project ID
+        groupId:
+          type: integer
+          nullable: true
+          minimum: 1
+          description: Target group ID (mutually exclusive with projectId)
+        assignedTo:
+          type: integer
+          minimum: 1
+          nullable: true
+          description: New assignee ID (invalid if groupId specified)
+    MoveTaskResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        taskId:
+          type: integer
+        affectedDependencies:
+          type: array
+          items:
+            type: object
+            properties:
+              relationshipId:
+                type: integer
+              action:
+                type: string
+                enum:
+                  - delete
+                  - update
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+    DependencyListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskRelationship'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            - INVALID_REQUEST_BODY
+            - FORBIDDEN
+            - INVALID_DATE_RANGE
+            - INVALID_TAGS
+            - TASK_NOT_FOUND
+            - STATUS_TRANSITION_FAILED
+            - CIRCULAR_DEPENDENCY
+            - DATE_CONFLICT
+        message:
+          type: string
+        field:
+          type: string
+          nullable: true
+    TaskStatus:
+      type: string
+      enum:
+        - TODO
+        - DOING
+        - DONE
+        - BLOCKED
+        - CANCELLED
+    TaskAttachment:
+      type: object
+      properties:
+        id:
+          type: integer
+        taskId:
+          type: integer
+        filename:
+          type: string
+        filepath:
+          type: string
+        filesize:
+          type: integer
+        fileType:
+          type: string
+        uploadedBy:
+          type: integer
+        uploadedAt:
+          type: string
+          format: date-time
+    TaskRelationship:
+      type: object
+      properties:
+        id:
+          type: integer
+        precedingTaskId:
+          type: integer
+        succeedingTaskId:
+          type: integer
+        type:
+          type: string
+          enum:
+            - FS # Finish-to-Start
+            - FF # Finish-to-Finish
+            - SS # Start-to-Start
+            - SF # Start-to-Finish
+    CreateTaskRequest:
+      $ref: '#/components/schemas/CreateTaskRequest'
+    MoveTaskRequest:
+      $ref: '#/components/schemas/MoveTaskRequest'
+    MoveTaskResponse:
+      $ref: '#/components/schemas/MoveTaskResponse'
+    UpdateDependencyRequest:
+      type: array
+      items:
+        type: object
+        required:
+          - precedingTaskId
+          - succeedingTaskId
+          - type
+        properties:
+          precedingTaskId:
+            type: integer
+            minimum: 1
+          succeedingTaskId:
+            type: integer
+            minimum: 1
+          type:
+            type: string
+            enum:
+              - FS
+              - FF
+              - SS
+              - SF
+    Task:
+      $ref: '#/components/schemas/Task'
+    TaskStatus:
+      $ref: '#/components/schemas/TaskStatus'
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    NotFound:
+      description: Resource not found
+    Unauthorized:
+      description: Authentication required
+    Forbidden:
+      description: Insufficient permissions
+    BadRequest:
+      description: Invalid request
+    InvalidDate:
+      description: Invalid date format or range
+info:
+  contact:
+    name: PM Tools Team
+  license:
+    name: MIT
+    url: https://github.com/kotaroyatabe0235/pmtools
+tags:
+  - name: Task
+    description: Task management operations
+  - name: Dependency
+    description: Task dependency (Gantt) operations
+  - name: Project
+    description: Project management operations
+  - name: User
+    description: User management operations
