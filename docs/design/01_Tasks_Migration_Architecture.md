@@ -7,11 +7,11 @@
 
 | Entity | ステータス | 機能 |
 |--------|-----------|------|
-| User | 実装済み | 登録、ログイン、権限設定 |
-| Project | 実装済み | 作成、編集、削除、移動 |
-| Tag | 実装済み | 作成、付け替え、削除 |
-| Report | 実装済み | データ分析レポート |
-| Calendar | 実装済み | イベント管理 |
+| User | **未実装** | 登録、ログイン、権限設定 |
+| Project | **未実装** | 作成、編集、削除、移動 |
+| Tag | **未実装** | 作成、付け替え、削除 |
+| Report | **未実装** | データ分析レポート |
+| Calendar | **未実装** | イベント管理 |
 
 ### 1.2 拡張対象
 **Phase 2: Tasks Management** - 設計中
@@ -80,9 +80,9 @@ Microsoft Project のようなタスク管理機能を追加・統合する。
 | Project | PM Core | タスクの所属先 |
 | Tag | PM Core | タスクのカテゴリ分類 |
 | **Task** | **New** | **タスク本体** |
-| TaskAttachment | New | ファイル添付管理 |
-| TaskGroup | New | タスクのグループ化 |
-| ProjectTaskRelationship | New | 複数プロジェクトへの紐付け |
+| TaskAttachment | **New** | ファイル添付管理 |
+| TaskGroup | **New** | タスクのグループ化 |
+| ProjectTaskRelationship | **New** | 複数プロジェクトへの紐付け |
 
 ---
 
@@ -142,9 +142,14 @@ public class Task {
     @LastModifiedDate
     private Instant updatedAt;
 
-    // Validation & Business Logic Methods
+    // Javadoc: Validation and Business Logic
+    /** Validates task data integrity. */
     public void validate();
+
+    /** Transitions task status with validation. */
     public void transitionStatus(String newStatus);
+
+    /** Calculates task progress percentage. */
     public BigDecimal calculateProgress();
 }
 
