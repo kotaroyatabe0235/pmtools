@@ -44,4 +44,36 @@ root
 >tools           : dockerfileやCIに関する設定ファイル等を配置するディレクトリ。内部のディレクトリ作成も任意。
 >README.md       : 単一のmdファイル。使用や使い方などを最終的に取りまとめる。
 >ABSOLUTE_RULE.md: 開発における絶対的なルールやこのリポジトリの目的などを記載する。(人間のみ編集可能)
+
+## 追加ルール
+
+### 追加ルール 1: プレビューコメント取得と適用
+GitHub の PR プレビューコメントの取得と対応フローを確立する。
+
+**手順:**
+1. PR 番号を特定
+2. GitHub CLI でレビューコメントを取得:
+   ```bash
+   gh pr view <PR_NUMBER> --json reviews,comments --limit 1000
+   ```
+3. コメント内容を解析:
+   - **Review Threads**: 議論の要約
+   - **Review Comments**: インライン指摘
+   - **General Comments**: PR 本文のコメント
+   - **Review Summary**: PR の要約
+4. AI に共有し、対応指示を出させる:
+   ```
+   以下の PR レビューコメントを確認して対応して:
+   <ここにコメント内容貼り付け>
+   ```
+5. 修正コミットを PR にパッチ適用:
+   ```bash
+   gh pr submit --repo=<OWNER>\ --repo=<REPO> --rebase
+   ```
+
+**注意事項:**
+- プレビューコメントを取得できない場合は、gh api repos/<OWNER>/<REPO>/pulls/<PR_NUMBER>/comments で raw JSON を取得
+- コメントは UTF-8 エンコーディングで取得
+- 各指摘は「修正する」「議論保留」「同意」いずれかとして分類
+- 修正後の差分レビューも取得し、再チェックを行う
 >PLAN.md         : 開発の計画を記載する
